@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { DiamondPlus, Check } from "@lucide/svelte";
+	import { dndzone } from "svelte-dnd-action";
+	import { flip } from "svelte/animate";
 
-	let { column } = $props();
+	let { column, onconsider, onfinalize } = $props();
 	let showInput = $state(false);
 
 	function hideInput(event: FocusEvent) {
@@ -19,16 +21,33 @@
 
 		if (!newTask) return;
 
-		column.tasks.push(newTask);
+		column.tasks.push({ id: Date.now(), name: newTask });
 		showInput = false;
 	}
+
+	const flipDurationMs = 100;
 </script>
 
-<div class="w-full h-fit bg-gray-100 p-4 rounded-lg shadow">
+<div class="w-full bg-gray-100 p-4 rounded-lg shadow">
 	<h2 class="font-bold mb-2">{column.title}</h2>
-	<ul class="space-y-2.5">
-		{#each column.tasks as task}
-			<li class="p-2 bg-white rounded shadow">{task}</li>
+	<ul
+		class="space-y-2.5"
+		use:dndzone={{
+			items: column.tasks,
+			type: "tasks",
+			dropTargetStyle: {},
+			flipDurationMs,
+		}}
+		{onconsider}
+		{onfinalize}
+	>
+		{#each column.tasks as task (task.id)}
+			<li
+				class="p-2 bg-white rounded shadow outline-none"
+				animate:flip={{ duration: flipDurationMs }}
+			>
+				{task.name}
+			</li>
 		{/each}
 		<li>
 			{#if !showInput}
